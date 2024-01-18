@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>indexed mp3player</title>
+</head><body>
+
+<h1>indexed mp3player</h1>
+<div id=divmain></div><br>
+<button id=btnplay>PLAY</button>
+<button id=btnstop>STOP</button>
+<button id=btnclear>CLEAR</button>
+<br>
+<hr>
+lib: <a href=https://github.com/code4fukui/IndexedDB>IndexedDB</a>, <a href=https://github.com/code4fukui/IndexedStorage>IndexedStorage</a><br>
+app: <a href=https://github.com/code4fukui/indexed-mp3player>src on GitHub</a><br>
+
+
+<style>
+body {
+  font-family: sans-serif;
+}
+#divmain {
+  padding: 1em;
+  border: 1px solid black;
+}
+a {
+  color: gray !important;
+}
+</style>
+
+<script type="module">
+//import { IndexedDB } from "https://code4fukui.github.io/IndexedDB/IndexedDB.js";
+import { IndexedDB } from "./IndexedDB.js";
+import { readAsArrayBufferAsync } from "https://code4sabae.github.io/js/readAsArrayBufferAsync.js";
+import { encodeData } from "https://code4fukui.github.io/dataencoder/encodeData.js";
+import { IndexedStorage } from "./IndexedStorage.js";
+
+const db = await IndexedDB.create("mp3files", ["name", "bin"]);
+const storage = await IndexedStorage.create("mp3storage");
+
+const getFiles = (e) => {
+  e.preventDefault();
+  if (e.type !== "drop") return null;
+  const files = [];
+  const ditems = e.dataTransfer.items;
+  for (let i = 0; i < ditems.length; i++) {
+      const item = ditems[i];
+      if (item.kind !== "file") continue;
+      const file = item.getAsFile();
+      files.push({ type: item.type, file });
+  }
+  return files;
+};
+
+const init = () => {
+  divmain.textContent = "MP3ファイルをドロップしてください (drop mp3files)";
+  current = 0;
+  currenta = null;
+  currentt = null;
+};
+
+divmain.ondrop = divmain.ondragover = async (e) => {
+  const files = getFiles(e);
+  if (!files) return;
+
+  for (const item of files) {
+    if (!item.file.name.endsWith(".mp3")) continue;
+    const bin = new Uint8Array(await readAsArrayBufferAsync(item.file));
+    if ((await db.get("name", item.file.name)).length == 0) {
+      await db.put({ name: item.file.name, bin });
+    }
+  }
+  stop();
+  init();
+  setPlaylist();
+};
+
+let current = 0;
+let currenta = null;
+let currentt = null;
+
+const createAudio = async(src) => {
+  return new Promise((resolve, reject) => {
+    if (!src) reject("src is null");
+    const audio = new Audio(src);
+    audio.addEventListener("loadeddata", () => resolve(audio));
+  });
+};
+
+const stop = async () => {
+  const div = divmain.children[current];
+  div.style.backgroundColor = "";
+  if (currenta) {
+    currenta.pause();
+    currenta = null;
+    clearTimeout(currentt);
+  }
+};
+
+const select = (div) => {
+  div.style.backgroundColor = "#aaddcc";
+};
+const play = async (n) => {
+  if (!await db.length()) return;
+  await storage.setItem("current", n);
+  stop();
+  current = n;
+  const div = divmain.children[current];
+  select(div);
+  const name = div.textContent;
+  const file = (await db.get("name", name))[0];
+  const data = encodeData("audio/mpeg", file.bin);
+  const audio = await createAudio(data);
+  audio.play();
+  currenta = audio;
+  currentt = setTimeout(() => {
+    div.style.backgroundColor = "";
+    if (current == divmain.children.length - 1) current = -1;
+    play(current + 1);
+  }, audio.duration * 1000);
+};
+
+const setPlaylist = async () => {
+  const list = await db.getAllKeys("name");
+  list.sort();
+  divmain.innerHTML = "";
+
+  for (let i = 0; i < list.length; i++) {
+    const div = document.createElement("div");
+    div.textContent = list[i];
+    divmain.appendChild(div);
+    div.onclick = () => play(i);
+  }
+};
+
+await setPlaylist();
+
+btnplay.onclick = () => play(current);
+btnstop.onclick = () => stop();
+btnclear.onclick = async () => {
+  await db.removeAll();
+  await setPlaylist();
+  init();
+};
+
+current = await storage.getItem("current") || 0;
+if (await db.length()) {
+  const div = divmain.children[current];
+  select(div);
+}
+
+</script>
