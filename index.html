@@ -27,11 +27,10 @@ a {
 </style>
 
 <script type="module">
-//import { IndexedDB } from "https://code4fukui.github.io/IndexedDB/IndexedDB.js";
-import { IndexedDB } from "./IndexedDB.js";
+import { IndexedDB } from "https://code4fukui.github.io/IndexedDB/IndexedDB.js";
 import { readAsArrayBufferAsync } from "https://code4sabae.github.io/js/readAsArrayBufferAsync.js";
 import { encodeData } from "https://code4fukui.github.io/dataencoder/encodeData.js";
-import { IndexedStorage } from "./IndexedStorage.js";
+import { IndexedStorage } from "https://code4fukui.github.io/IndexedStorage/IndexedStorage.js";
 
 const db = await IndexedDB.create("mp3files", ["name", "bin"]);
 const storage = await IndexedStorage.create("mp3storage");
