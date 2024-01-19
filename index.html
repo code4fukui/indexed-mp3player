@@ -49,13 +49,6 @@ const getFiles = (e) => {
   return files;
 };
 
-const init = () => {
-  divmain.textContent = "MP3ファイルをドロップしてください (drop mp3files)";
-  current = 0;
-  currenta = null;
-  currentt = null;
-};
-
 divmain.ondrop = divmain.ondragover = async (e) => {
   const files = getFiles(e);
   if (!files) return;
@@ -67,7 +60,6 @@ divmain.ondrop = divmain.ondragover = async (e) => {
       await db.put({ name: item.file.name, bin });
     }
   }
-  stop();
   init();
   setPlaylist();
 };
@@ -115,6 +107,14 @@ const play = async (n) => {
     if (current == divmain.children.length - 1) current = -1;
     play(current + 1);
   }, audio.duration * 1000);
+};
+
+const init = () => {
+  stop();
+  divmain.textContent = "MP3ファイルをドロップしてください (drop mp3files)";
+  current = 0;
+  currenta = null;
+  currentt = null;
 };
 
 const setPlaylist = async () => {
