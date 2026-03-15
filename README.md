@@ -1,5 +1,7 @@
 # indexed-mp3player
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 A simple indexed MP3 player that allows users to upload and play MP3 files using the IndexedDB and IndexedStorage APIs.
 
 ## Features
