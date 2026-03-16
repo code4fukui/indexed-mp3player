@@ -26,4 +26,4 @@ This application uses the following open-source libraries:
 - [IndexedStorage](https://github.com/code4fukui/IndexedStorage)
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+MIT License — see [LICENSE](LICENSE).
